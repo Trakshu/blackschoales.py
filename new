@@ -1,0 +1,48 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+
+# Black-Scholes pricing function
+def black_scholes_call(S, K, r, T, sigma):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    C = S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+    return C
+
+# Parameters
+r = 0.05
+sigma = 0.2
+T = 1
+K = 100
+S_0 = 100
+N_sim = int(1e5)
+
+# Simulation and result storage
+C = []
+
+for j in range(200):
+    # Simulation
+    epsilon = np.random.randn(N_sim)
+    S_T = S_0 * np.exp((r - sigma ** 2 / 2) * T + sigma * np.sqrt(T) * epsilon)
+    C_T = np.maximum(0, S_T - K)
+
+    # Estimated option price
+    C_0 = np.mean(np.exp(-r * T) * C_T)
+    C.append(C_0)
+
+    # Black-Scholes theoretical price
+    if j == 0:
+        C_0_BS = black_scholes_call(S_0, K, r, T, sigma)
+        print(f"Estimated Price: {C_0:.4f}")
+        print(f"Theoretical Price: {C_0_BS:.4f}")
+
+# Plotting
+plt.figure(1)
+plt.hist(C, bins=20, density=True, color='yellow', edgecolor='black', alpha=0.7)
+plt.xlabel('Price')
+plt.ylabel('Frequency')
+
+# Plot theoretical price as a vertical line
+plt.axvline(C_0_BS, color='blue', linewidth=4)
+plt.tight_layout()
+plt.show()
